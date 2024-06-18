@@ -13,31 +13,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send email notification
+        if: ${{ github.event_name == 'issues' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "GitHub Notification: ${{ github.event_name }}"
+          subject: "GitHub Notification: New Issue - ${{ github.event.issue.title }}"
           body: |
-            ${{ if github.event_name == 'issues' }}
-              A new issue has been created or updated in the repository:
-              Issue Title: ${{ github.event.issue.title }}
-              Issue Description: ${{ github.event.issue.body }}
-              Issue URL: ${{ github.event.issue.html_url }}
-            ${{ else if github.event_name == 'project_card' }}
-              A card has been moved in the project:
-              Card ID: ${{ github.event.project_card.id }}
-              Card Note: ${{ github.event.project_card.note }}
-              Card URL: ${{ github.event.project_card.url }}
-            ${{ else if github.event_name == 'issue_comment' }}
-              A comment has been created or edited in an issue:
-              Issue Title: ${{ github.event.issue.title }}
-              Comment Body: ${{ github.event.comment.body }}
-              Comment URL: ${{ github.event.comment.html_url }}
-            ${{ else }}
-              Unexpected event: ${{ github.event_name }}
-            ${{ endif }}
+            A new issue has been created or updated in the repository:
+            Issue Title: ${{ github.event.issue.title }}
+            Issue Description: ${{ github.event.issue.body }}
+            Issue URL: ${{ github.event.issue.html_url }}
+          to: alejandragarcia1@upb.edu
+          from: aleandy7@gmail.com
+
+      - name: Send email notification
+        if: ${{ github.event_name == 'project_card' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "GitHub Notification: Card Moved - ${{ github.event.project_card.note }}"
+          body: |
+            A card has been moved in the project:
+            Card ID: ${{ github.event.project_card.id }}
+            Card Note: ${{ github.event.project_card.note }}
+            Card URL: ${{ github.event.project_card.url }}
+          to: alejandragarcia1@upb.edu
+          from: aleandy7@gmail.com
+
+      - name: Send email notification
+        if: ${{ github.event_name == 'issue_comment' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "GitHub Notification: Comment Added - ${{ github.event.comment.body }}"
+          body: |
+            A comment has been created or edited in an issue:
+            Issue Title: ${{ github.event.issue.title }}
+            Comment Body: ${{ github.event.comment.body }}
+            Comment URL: ${{ github.event.comment.html_url }}
           to: alejandragarcia1@upb.edu
           from: aleandy7@gmail.com
