@@ -99,7 +99,6 @@ jobs:
           echo "A comment has been created or edited in an issue:"
           echo "Issue Title: ${{ github.event.issue.title }}"
           echo "Comment Body: ${{ github.event.comment.body }}"
-          echo "Comment URL: ${{ github.event.comment.html_url }}"
           
           # Uso de curl para enviar el correo electrónico
           curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
