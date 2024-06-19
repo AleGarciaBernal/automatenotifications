@@ -1,58 +1,14 @@
-name: Issue and Project Notification
+name: Project Card Notifications
 
 on:
-  issues:
-    types: [opened, edited]
   project_card:
     types: [moved]
-  issue_comment:
-    types: [created, edited]
 
 jobs:
   send_email:
     runs-on: ubuntu-latest
     steps:
-      - name: Send email notification on issue event
-        if: ${{ github.event_name == 'issues' }}
-        env:
-          SMTP_SERVER: smtp.gmail.com
-          SMTP_PORT: 465
-          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: |
-          set -x  # Habilitar el modo de depuración
-          echo "A new issue has been created or updated in the repository:"
-          echo "Issue Title: ${{ github.event.issue.title }}"
-          echo "Issue Description: ${{ github.event.issue.body }}"
-          echo "Issue URL: ${{ github.event.issue.html_url }}"
-          
-          echo "Sending email notification..."
-          response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
-            --mail-from "${EMAIL_USERNAME}" \
-            --mail-rcpt "alejandragarcia1@upb.edu" \
-            --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
-            --upload-file - <<END
-          From: aleandy7@gmail.com
-          To: alejandragarcia1@upb.edu
-          Subject: New Issue: ${{ github.event.issue.title }}
-
-          A new issue has been created or updated in the repository:
-          Issue Title: ${{ github.event.issue.title }}
-          Issue Description: ${{ github.event.issue.body }}
-          Issue URL: ${{ github.event.issue.html_url }}
-          END
-          )
-
-          echo "Response from email server: $response"
-
-          # Verifica el código de salida de curl
-          if [ $? -ne 0 ]; then
-            echo "Error: Failed to send email."
-            exit 1
-          fi
-
-      - name: Send email notification on project card event
-        if: ${{ github.event_name == 'project_card' }}
+      - name: Send email notification on project card move
         env:
           SMTP_SERVER: smtp.gmail.com
           SMTP_PORT: 465
@@ -63,7 +19,7 @@ jobs:
           echo "A card has been moved in the project:"
           echo "Card ID: ${{ github.event.project_card.id }}"
           echo "Card Note: ${{ github.event.project_card.note }}"
-          echo "Card URL: ${{ github.event.project_card.html_url }}"
+          echo "Card URL: ${{ github.event.project_card.url }}"
           
           echo "Sending email notification..."
           response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
@@ -78,46 +34,7 @@ jobs:
           A card has been moved in the project:
           Card ID: ${{ github.event.project_card.id }}
           Card Note: ${{ github.event.project_card.note }}
-          Card URL: ${{ github.event.project_card.html_url }}
-          END
-          )
-
-          echo "Response from email server: $response"
-
-          # Verifica el código de salida de curl
-          if [ $? -ne 0 ]; then
-            echo "Error: Failed to send email."
-            exit 1
-          fi
-
-      - name: Send email notification on issue comment event
-        if: ${{ github.event_name == 'issue_comment' }}
-        env:
-          SMTP_SERVER: smtp.gmail.com
-          SMTP_PORT: 465
-          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: |
-          set -x  # Habilitar el modo de depuración
-          echo "A comment has been created or edited in an issue:"
-          echo "Issue Title: ${{ github.event.issue.title }}"
-          echo "Comment Body: ${{ github.event.comment.body }}"
-          echo "Comment URL: ${{ github.event.comment.html_url }}"
-          
-          echo "Sending email notification..."
-          response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
-            --mail-from "${EMAIL_USERNAME}" \
-            --mail-rcpt "alejandragarcia1@upb.edu" \
-            --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
-            --upload-file - <<END
-          From: aleandy7@gmail.com
-          To: alejandragarcia1@upb.edu
-          Subject: Comment Added: ${{ github.event.issue.title }}
-
-          A comment has been created or edited in an issue:
-          Issue Title: ${{ github.event.issue.title }}
-          Comment Body: ${{ github.event.comment.body }}
-          Comment URL: ${{ github.event.comment.html_url }}
+          Card URL: ${{ github.event.project_card.url }}
           END
           )
 
