@@ -2,7 +2,7 @@ name: Issue and Project Notification
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled, unlabeled]
   project_card:
     types: [moved]
   issue_comment:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send email notification on issue event
-        if: ${{ github.event_name == 'issues' }}
+        if: ${{ github.event_name == 'issues' && github.event.action == 'opened' }}
         env:
           SMTP_SERVER: smtp.gmail.com
           SMTP_PORT: 465
@@ -21,11 +21,13 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
           set -x  # Habilitar el modo de depuración
-          echo "A new issue has been created or updated in the repository:"
+          LABELS=$(echo ${{ github.event.issue.labels }} | jq -r '.[].name' | tr '\n' ', ' | sed 's/, $//')
+          echo "A new issue has been created in the repository:"
           echo "Issue Title: ${{ github.event.issue.title }}"
           echo "Issue Description: ${{ github.event.issue.body }}"
           echo "Issue URL: ${{ github.event.issue.html_url }}"
-          
+          echo "Labels: $LABELS"
+
           echo "Sending email notification..."
           response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
             --mail-from "${EMAIL_USERNAME}" \
@@ -36,9 +38,49 @@ jobs:
           To: alejandragarcia1@upb.edu
           Subject: New Issue: ${{ github.event.issue.title }}
 
-          A new issue has been created or updated in the repository:
+          A new issue has been created in the repository:
           Issue Title: ${{ github.event.issue.title }}
           Issue Description: ${{ github.event.issue.body }}
+          Issue URL: ${{ github.event.issue.html_url }}
+          Labels: $LABELS
+          END
+          )
+
+          echo "Response from email server: $response"
+
+          # Verifica el código de salida de curl
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to send email."
+            exit 1
+          fi
+
+      - name: Send email notification on issue label event
+        if: ${{ github.event_name == 'issues' && (github.event.action == 'labeled' || github.event.action == 'unlabeled') }}
+        env:
+          SMTP_SERVER: smtp.gmail.com
+          SMTP_PORT: 465
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: |
+          set -x  # Habilitar el modo de depuración
+          echo "An issue label has been changed:"
+          echo "Issue Title: ${{ github.event.issue.title }}"
+          echo "Label: ${{ github.event.label.name }}"
+          echo "Issue URL: ${{ github.event.issue.html_url }}"
+
+          echo "Sending email notification..."
+          response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
+            --mail-from "${EMAIL_USERNAME}" \
+            --mail-rcpt "alejandragarcia1@upb.edu" \
+            --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
+            --upload-file - <<END
+          From: aleandy7@gmail.com
+          To: alejandragarcia1@upb.edu
+          Subject: Issue Label Changed: ${{ github.event.issue.title }}
+
+          An issue label has been changed:
+          Issue Title: ${{ github.event.issue.title }}
+          Label: ${{ github.event.label.name }}
           Issue URL: ${{ github.event.issue.html_url }}
           END
           )
