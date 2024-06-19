@@ -2,7 +2,7 @@ name: Issue and Project Notification
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled, unlabeled]
   project_card:
     types: [moved]
   issue_comment:
@@ -21,34 +21,102 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
           set -x  # Habilitar el modo de depuración
-          echo "A new issue has been created or updated in the repository:"
-          echo "Issue Title: ${{ github.event.issue.title }}"
-          echo "Issue Description: ${{ github.event.issue.body }}"
-          echo "Issue URL: ${{ github.event.issue.html_url }}"
           
-          echo "Sending email notification..."
-          response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
-            --mail-from "${EMAIL_USERNAME}" \
-            --mail-rcpt "alejandragarcia1@upb.edu" \
-            --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
-            --upload-file - <<END
-          From: aleandy7@gmail.com
-          To: alejandragarcia1@upb.edu
-          Subject: New Issue: ${{ github.event.issue.title }}
+          if [[ "${{ github.event.action }}" == "opened" ]]; then
+            echo "A new issue has been created in the repository:"
+            echo "Issue Title: ${{ github.event.issue.title }}"
+            echo "Issue Description: ${{ github.event.issue.body }}"
+            echo "Issue URL: ${{ github.event.issue.html_url }}"
+            echo "Labels: ${{ github.event.issue.labels.*.name }}"
 
-          A new issue has been created or updated in the repository:
-          Issue Title: ${{ github.event.issue.title }}
-          Issue Description: ${{ github.event.issue.body }}
-          Issue URL: ${{ github.event.issue.html_url }}
-          END
-          )
+            echo "Sending email notification..."
+            response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
+              --mail-from "${EMAIL_USERNAME}" \
+              --mail-rcpt "alejandragarcia1@upb.edu" \
+              --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
+              --upload-file - <<END
+            From: aleandy7@gmail.com
+            To: alejandragarcia1@upb.edu
+            Subject: New Issue: ${{ github.event.issue.title }}
 
-          echo "Response from email server: $response"
+            A new issue has been created in the repository:
+            Issue Title: ${{ github.event.issue.title }}
+            Issue Description: ${{ github.event.issue.body }}
+            Issue URL: ${{ github.event.issue.html_url }}
+            Labels: ${{ github.event.issue.labels.*.name }}
+            END
+            )
 
-          # Verifica el código de salida de curl
-          if [ $? -ne 0 ]; then
-            echo "Error: Failed to send email."
-            exit 1
+            echo "Response from email server: $response"
+
+            if [ $? -ne 0 ]; then
+              echo "Error: Failed to send email."
+              exit 1
+            fi
+          fi
+
+          if [[ "${{ github.event.action }}" == "edited" ]]; then
+            echo "An issue has been edited in the repository:"
+            echo "Issue Title: ${{ github.event.issue.title }}"
+            echo "Issue Description: ${{ github.event.issue.body }}"
+            echo "Issue URL: ${{ github.event.issue.html_url }}"
+            echo "Labels: ${{ github.event.issue.labels.*.name }}"
+
+            echo "Sending email notification..."
+            response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
+              --mail-from "${EMAIL_USERNAME}" \
+              --mail-rcpt "alejandragarcia1@upb.edu" \
+              --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
+              --upload-file - <<END
+            From: aleandy7@gmail.com
+            To: alejandragarcia1@upb.edu
+            Subject: Issue Edited: ${{ github.event.issue.title }}
+
+            An issue has been edited in the repository:
+            Issue Title: ${{ github.event.issue.title }}
+            Issue Description: ${{ github.event.issue.body }}
+            Issue URL: ${{ github.event.issue.html_url }}
+            Labels: ${{ github.event.issue.labels.*.name }}
+            END
+            )
+
+            echo "Response from email server: $response"
+
+            if [ $? -ne 0 ]; then
+              echo "Error: Failed to send email."
+              exit 1
+            fi
+          fi
+
+          if [[ "${{ github.event.action }}" == "labeled" || "${{ github.event.action }}" == "unlabeled" ]]; then
+            echo "An issue has had its labels changed in the repository:"
+            echo "Issue Title: ${{ github.event.issue.title }}"
+            echo "Issue URL: ${{ github.event.issue.html_url }}"
+            echo "Labels: ${{ github.event.issue.labels.*.name }}"
+
+            echo "Sending email notification..."
+            response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
+              --mail-from "${EMAIL_USERNAME}" \
+              --mail-rcpt "alejandragarcia1@upb.edu" \
+              --user "${EMAIL_USERNAME}:${EMAIL_PASSWORD}" \
+              --upload-file - <<END
+            From: aleandy7@gmail.com
+            To: alejandragarcia1@upb.edu
+            Subject: Issue Labels Changed: ${{ github.event.issue.title }}
+
+            An issue has had its labels changed in the repository:
+            Issue Title: ${{ github.event.issue.title }}
+            Issue URL: ${{ github.event.issue.html_url }}
+            Labels: ${{ github.event.issue.labels.*.name }}
+            END
+            )
+
+            echo "Response from email server: $response"
+
+            if [ $? -ne 0 ]; then
+              echo "Error: Failed to send email."
+              exit 1
+            fi
           fi
 
       - name: Send email notification on project card event
@@ -84,7 +152,6 @@ jobs:
 
           echo "Response from email server: $response"
 
-          # Verifica el código de salida de curl
           if [ $? -ne 0 ]; then
             echo "Error: Failed to send email."
             exit 1
@@ -123,7 +190,6 @@ jobs:
 
           echo "Response from email server: $response"
 
-          # Verifica el código de salida de curl
           if [ $? -ne 0 ]; then
             echo "Error: Failed to send email."
             exit 1
