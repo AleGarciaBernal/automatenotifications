@@ -63,7 +63,7 @@ jobs:
           echo "A card has been moved in the project:"
           echo "Card ID: ${{ github.event.project_card.id }}"
           echo "Card Note: ${{ github.event.project_card.note }}"
-          echo "Card URL: ${{ github.event.project_card.url }}"
+          echo "Card URL: ${{ github.event.project_card.html_url }}"
           
           echo "Sending email notification..."
           response=$(curl -s --url "smtps://$SMTP_SERVER:$SMTP_PORT" --ssl-reqd \
@@ -78,7 +78,7 @@ jobs:
           A card has been moved in the project:
           Card ID: ${{ github.event.project_card.id }}
           Card Note: ${{ github.event.project_card.note }}
-          Card URL: ${{ github.event.project_card.url }}
+          Card URL: ${{ github.event.project_card.html_url }}
           END
           )
 
